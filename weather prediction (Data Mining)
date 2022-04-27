@@ -1,0 +1,65 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+from sklearn.naive_bayes import GaussianNB
+from sklearn.decomposition import PCA
+from sklearn.impute import KNNImputer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import confusion_matrix
+from sklearn.linear_model import LogisticRegression 
+path="/content/drive/MyDrive/weather.csv"
+df=pd.read_csv(path)#read_csv returns a data frame object
+print(df)
+X=df.iloc[:,:-1]#extracting all columns exept the last 
+#print(X)
+Y=df.iloc[:,-1]
+#Encoding the strings to Numericals
+#print(X["WindGustDir"])
+#four features are categorical which have to be converted into numerical data format before feeding to the ML model
+lencode=LabelEncoder()
+#obj of labelencoder is created so as to call fit_transform which converts categorical to numerical
+X['WindGustDir']= lencode.fit_transform(X['WindGustDir'])
+X['WindDir9am']= lencode.fit_transform(X['WindDir9am'])
+X['WindDir3pm']= lencode.fit_transform(X['WindDir3pm'])
+X['RainToday']= lencode.fit_transform(X['RainToday'])
+#imputer is used to fill missing values with the average value in that column for k-neighbours
+imputer = KNNImputer(n_neighbors=3)
+imputer.fit_transform(X)
+"""print(X["WindDir9am"])
+print(X["WindDir3pm"])
+print(X["RainToday"]"""
+#to check if any value is empty/nan/infinity and convert them into a number
+print("Status",np.any(np.isnan(X)))
+X=np.nan_to_num(X);
+#using too many features will result in a complex model which may sometimes lead to over-fitting 
+#to avoid that dim red is performed using pca,where n new features are created for n original features using eigen vectors &values
+#out of th n new component vectors 10 component are selected(whose total vairance comes out to be 96%)
+from sklearn.decomposition import PCA
+pca=PCA(n_components=10)
+pca.fit(X)
+#print(pca.explained_variance_ratio_)
+trainx,testx,trainy,testy=train_test_split(X,Y,test_size=0.20,random_state=42)#an integer value for randome state the same set of 
+#randome samples are used for train and test data for each run
+#creating object for GaussianNB class
+classifier = GaussianNB()
+classifier.fit(trainx,trainy)#fit method is used for training
+pred_y=classifier.predict(testx)#to predict the output
+#print(pred_y)
+#print(testy)
+print("Accurarcy for naive bayes algorithm: ",accuracy_score(testy,pred_y)*100,"%")
+print(confusion_matrix(testy,pred_y))
+print(precision_recall_fscore_support(testy,pred_y,average=None))
+classifier2=LogisticRegression(solver="lbfgs",max_iter=1000)
+classifier2.fit(trainx,trainy)#fit method is used for training
+lpred_y=classifier2.predict(testx)#to predict the output
+#print(lpred_y)
+#print(testy)
+print("Accurarcy for naive bayes algorithm: ",accuracy_score(testy,lpred_y)*100,"%")
+print(confusion_matrix(testy,lpred_y))
+print(precision_recall_fscore_support(testy,lpred_y,average=None))
+
+
+
+    
